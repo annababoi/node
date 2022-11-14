@@ -1,24 +1,44 @@
-const fs = require('fs/promises');
-const path = require('path');
+const mongoose = require ('mongoose');
 
-const sorter = async (readFolder, moveFolder, gender) => {
-    try {
-        const folderPath = path.join(__dirname, readFolder);
-        const files = await fs.readdir(folderPath);
+const express = require('express');
+const {urlencoded} = require("express");
 
-        for (const file of files) {
-            const filePath = path.join(folderPath, file);
-            const data = await fs.readFile(filePath);
-            const user = JSON.parse(data);
+const authRouter = require('./router/auth.router');
+const carRouter = require('./router/car.routers');
+const userRouter = require('./router/user.routers');
 
-            if (user.gender === gender) {
-                await fs.rename(filePath, path.join(__dirname, moveFolder, file))
-            }
-        }
-    } catch (e) {
-        console.log(e)
-    }
-}
 
-sorter('boy', 'girls', 'female');
-sorter('girls', 'boy', 'male');
+const configs = require('./config/config')
+
+const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+
+
+app.use('/auth', authRouter);
+app.use('/cars', carRouter);
+app.use('/users', userRouter);
+
+
+
+app.use((err, req,res,next) => {
+
+    res.status(err.status || 500).json({
+        message: err.message || 'Unknown error',
+        status: err.status || 500
+    })
+})
+
+app.listen(configs.PORT,async () => {
+    await mongoose.connect(configs.MONGO_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+    });
+    console.log(`Listen port ${configs.PORT}`);
+
+
+});
+
+
+

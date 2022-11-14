@@ -1,0 +1,8 @@
+class Api_error extends Error {
+    constructor(message, status) {
+        super(message);
+        this.status = status;
+    }
+}
+
+module.exports = {Api_error};
